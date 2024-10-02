@@ -30,9 +30,13 @@ jobs:
           # We must fetch at least the immediate parents so that if this is
           # a pull request then we can checkout the head.
           fetch-depth: 2
-      - name: Set output
-        id: vars
-        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+      - name: Inject tag into Dockerfile
+        run: sed -i "s|{{TAG}}|${{ steps.vars.outputs.tag }}|g" Dockerfile
       -
         name: Build and push
         id: docker_build
@@ -42,7 +46,9 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: loafoe/prometheus-watermeter-exporter:${{ steps.vars.outputs.tag }}
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}

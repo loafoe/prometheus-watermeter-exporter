@@ -24,6 +24,11 @@ jobs:
          registry: ghcr.io
          username: ${{ github.actor }}
          password: ${{ secrets.GITHUB_TOKEN }}
+     - name: Extract metadata (tags, labels) for Docker
+       id: meta
+       uses: docker/metadata-action@v5
+       with:
+         images: ghcr.io/${{ github.repository }}
      -
        name: Build and push
        uses: docker/build-push-action@v6
@@ -32,4 +37,6 @@ jobs:
          file: ./Dockerfile
          platforms: linux/amd64,linux/arm64,linux/arm/v7
          push: true
-         tags: loafoe/prometheus-watermeter-exporter:latest
+         tags: ${{ steps.meta.outputs.tags }}
+         cache-from: type=local,src=/tmp/.buildx-cache
+         cache-to: type=local,dest=/tmp/.buildx-cache
