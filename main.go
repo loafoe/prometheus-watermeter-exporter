@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"github.com/loafoe/prometheus-watermeter-exporter/watermeter"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"os"
 	"time"
@@ -61,8 +60,6 @@ func main() {
 	// Start
 	wm.Start()
 
-	logrus.SetFormatter(&logrus.TextFormatter{FullTimestamp: true})
-
 	go func() {
 		for t := range wm.Incoming {
 			totalLiterM3.Set(t.Data.TotalLiterM3)
@@ -73,7 +70,7 @@ func main() {
 		}
 	}()
 
-	logrus.Infoln("Start listening at", listenAddr)
+	logger.Info("Start listening", "address", listenAddr)
 	http.Handle("/metrics", promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
 	logrus.Fatalln(http.ListenAndServe(listenAddr, nil))
 }
