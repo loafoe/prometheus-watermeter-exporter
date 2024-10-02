@@ -6,7 +6,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -44,11 +43,6 @@ func init() {
 	registry.MustRegister(activeLiterPerMinute)
 	registry.MustRegister(totalLiterOffsetM3)
 	registry.MustRegister(wifiStrength)
-}
-
-func floatValue(input string) (fval float64) {
-	fval, _ = strconv.ParseFloat(input, 64)
-	return
 }
 
 func main() {
