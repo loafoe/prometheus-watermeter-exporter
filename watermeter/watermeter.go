@@ -3,11 +3,14 @@ package watermeter
 import (
 	"encoding/json"
 	"io"
+	"log/slog"
 	"net/http"
 )
 
 type Watermeter struct {
 	addr     string
+	verbose  bool
+	logger   *slog.Logger
 	Incoming chan *Telegram
 }
 
@@ -32,24 +35,38 @@ type Data struct {
 	TotalLiterOffsetM3 int     `json:"total_liter_offset_m3"`
 }
 
-func New(addr string) (*Watermeter, error) {
-	return &Watermeter{addr: addr}, nil
+func New(addr string, verbose bool, logger *slog.Logger) (*Watermeter, error) {
+	return &Watermeter{
+		addr:     addr,
+		verbose:  verbose,
+		logger:   logger,
+		Incoming: make(chan *Telegram),
+	}, nil
 }
 
 func (w *Watermeter) Start() {
+	if w.verbose {
+		w.logger.Info("Starting watermeter reader")
+	}
 	go w.run()
 }
 
 func (w *Watermeter) run() {
-	info, err := w.readInfo()
-	if err != nil {
-		return
-	}
 	defer close(w.Incoming)
 
+	info, err := w.readInfo()
+	if err != nil {
+		w.logger.Error("Failed to read watermeter info", "error", err)
+		return
+	}
+
 	for {
+		if w.verbose {
+			w.logger.Info("Reading watermeter data")
+		}
 		data, err := w.readData()
 		if err != nil {
+			w.logger.Error("Failed to read watermeter data", "error", err)
 			return
 		}
 		w.Incoming <- &Telegram{info, data}

@@ -19,22 +19,22 @@ var metricNamePrefix = "watermeter_"
 
 var (
 	registry     = prometheus.NewRegistry()
-	totalLiterM3 = prometheus.NewGauge(prometheus.GaugeOpts{
+	totalLiterM3 = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: metricNamePrefix + "total_liter_m3",
 		Help: "Total liters in cubic meter",
-	})
-	activeLiterPerMinute = prometheus.NewGauge(prometheus.GaugeOpts{
+	}, []string{"serial"})
+	activeLiterPerMinute = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: metricNamePrefix + "active_liter_lpm",
 		Help: "Active liter usage per minute",
-	})
-	totalLiterOffsetM3 = prometheus.NewGauge(prometheus.GaugeOpts{
+	}, []string{"serial"})
+	totalLiterOffsetM3 = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: metricNamePrefix + "total_liter_offset_m3",
 		Help: "Total liter offset in cubic meter",
-	})
-	wifiStrength = prometheus.NewGauge(prometheus.GaugeOpts{
+	}, []string{"serial"})
+	wifiStrength = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: metricNamePrefix + "wifi_strength",
 		Help: "wifi signal strength",
-	})
+	}, []string{"serial"})
 )
 
 func init() {
@@ -47,11 +47,11 @@ func init() {
 func main() {
 	logger := slog.Default()
 	flag.StringVar(&listenAddr, "listen", "127.0.0.1:8880", "Listen address for HTTP metrics")
-	flag.StringVar(&watermeterAddr, "ip", "", "IP address of Watermeter on your network")
+	flag.StringVar(&watermeterAddr, "addr", "", "IP address of Watermeter on your network")
 	flag.BoolVar(&verbose, "verbose", false, "Verbose output logging")
 	flag.Parse()
 
-	wm, err := watermeter.New(watermeterAddr)
+	wm, err := watermeter.New(watermeterAddr, verbose, logger)
 	if err != nil {
 		logger.Error("Quitting because of error opening watermeter address", "error", err, "addr", watermeterAddr)
 		os.Exit(1)
@@ -61,13 +61,21 @@ func main() {
 	wm.Start()
 
 	go func() {
+		if verbose {
+			logger.Info("Starting metrics updater")
+		}
 		for t := range wm.Incoming {
-			totalLiterM3.Set(t.Data.TotalLiterM3)
-			activeLiterPerMinute.Set(float64(t.Data.ActiveLiterLpm))
-			totalLiterOffsetM3.Set(float64(t.Data.TotalLiterOffsetM3))
-			wifiStrength.Set(float64(t.Data.WifiStrength))
+			if verbose {
+				logger.Info("Received telegram", "info", t.Info, "data", t.Data)
+			}
+			totalLiterM3.WithLabelValues(t.Info.Serial).Set(t.Data.TotalLiterM3)
+			activeLiterPerMinute.WithLabelValues(t.Info.Serial).Set(float64(t.Data.ActiveLiterLpm))
+			totalLiterOffsetM3.WithLabelValues(t.Info.Serial).Set(float64(t.Data.TotalLiterOffsetM3))
+			wifiStrength.WithLabelValues(t.Info.Serial).Set(float64(t.Data.WifiStrength))
 			time.Sleep(2 * time.Second)
 		}
+		logger.Info("Metrics updater stopped")
+		os.Exit(2)
 	}()
 
 	logger.Info("Start listening", "address", listenAddr)
