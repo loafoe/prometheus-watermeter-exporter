@@ -72,5 +72,5 @@ func main() {
 
 	logger.Info("Start listening", "address", listenAddr)
 	http.Handle("/metrics", promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
-	logrus.Fatalln(http.ListenAndServe(listenAddr, nil))
+	_ = http.ListenAndServe(listenAddr, nil)
 }
