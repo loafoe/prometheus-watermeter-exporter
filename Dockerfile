@@ -12,7 +12,6 @@ RUN GIT_COMMIT=$(git rev-parse --short HEAD) && \
 
 FROM alpine:latest
 RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
-WORKDIR /app
-COPY --from=builder /build/prometheus-watermeter-exporter /app
-EXPOSE 8888
-CMD ["/app/prometheus-watermeter-exporter", "-listen", "0.0.0.0:8880"]
+WORKDIR /
+COPY --from=builder /build/prometheus-watermeter-exporter /usr/bin
+EXPOSE 8880
