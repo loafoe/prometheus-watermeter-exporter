@@ -51,6 +51,8 @@ func main() {
 	flag.BoolVar(&verbose, "verbose", false, "Verbose output logging")
 	flag.Parse()
 
+	logger.Info("Starting watermeter exporter", "address", watermeterAddr)
+
 	wm, err := watermeter.New(watermeterAddr, verbose, logger)
 	if err != nil {
 		logger.Error("Quitting because of error opening watermeter address", "error", err, "addr", watermeterAddr)
