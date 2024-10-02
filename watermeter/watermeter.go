@@ -31,8 +31,8 @@ type Data struct {
 	WifiSsid           string  `json:"wifi_ssid"`
 	WifiStrength       int     `json:"wifi_strength"`
 	TotalLiterM3       float64 `json:"total_liter_m3"`
-	ActiveLiterLpm     int     `json:"active_liter_lpm"`
-	TotalLiterOffsetM3 int     `json:"total_liter_offset_m3"`
+	ActiveLiterLpm     float64 `json:"active_liter_lpm"`
+	TotalLiterOffsetM3 float64 `json:"total_liter_offset_m3"`
 }
 
 func New(addr string, verbose bool, logger *slog.Logger) (*Watermeter, error) {
