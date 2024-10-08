@@ -2,6 +2,8 @@
 
 Prometheus exporter for HomeWizard Wifi Watermeter.
 
+![Water panel](resources/water.png)
+
 ## Installation
 
 With Go install:
@@ -39,6 +41,10 @@ watermeter_total_liter_offset_m3{serial="deadbeafabc"} 0
 # TYPE watermeter_wifi_strength gauge
 watermeter_wifi_strength{serial="deadbeafabc"} 100
 ```
+
+### Grafana Dashboard
+
+An [example dashboard](resources/water.json) is available.
 
 ## License
 
